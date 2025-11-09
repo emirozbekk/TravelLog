@@ -13,6 +13,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "infoPlist":{
+        "NSLocationWhenInUseUsageDescription": "We use your location to tag trips on the map."
+      },
       "supportsTablet": true
     },
     "android": {
