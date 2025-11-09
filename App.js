@@ -447,13 +447,3 @@ export default function App() {
   );
 }
 
-// Quick sanity checks while developing
-(function devTests() {
-  try {
-    const t0 = createMockTrip(0);
-    console.assert(/^\d{4}-\d{2}-\d{2}$/.test(t0.date), "date format");
-    console.assert(t0.coords && typeof t0.coords.latitude === "number", "coords exist");
-  } catch (e) {
-    console.warn("devTests failed", e);
-  }
-})();
