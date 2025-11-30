@@ -252,6 +252,12 @@ const takePhoto = async () => {
 
   const onSave = () => {
     if (!title.trim()) return Alert.alert("Missing", "Give your trip a title.");
+        // Validate date format: YYYY-MM-DD
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) {
+      return Alert.alert("Invalid Date", "Please enter date as YYYY-MM-DD.");
+    }
+
     const finalCoords = coords || { latitude: 60.1699, longitude: 24.9384 };
     addTrip({
       title: title.trim(),
@@ -408,7 +414,9 @@ const weather = useWeather(trip?.coords);
 const TimelineScreen = ({ trips, nav, setSelected }) => (
   <ScrollView style={{ flex: 1, backgroundColor: "beige" }} contentContainerStyle={{ padding: 16 }}>
     <Text style={{ color: "black", fontSize: 22, fontWeight: "800" }}>Timeline</Text>
-    {trips.map((t) => (
+    {[...trips]
+  .sort((a, b) => new Date(b.date) - new Date(a.date))
+  .map((t) => (
       <TouchableOpacity
         key={t.id}
         onPress={() => {
