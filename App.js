@@ -15,6 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
 
+
 // Button with a consistent look
 const Btn = ({ title, onPress, style, disabled }) => (
   <TouchableOpacity
@@ -61,13 +62,36 @@ function createMockTrip(i) {
 
 const initialTrips = Array.from({ length: 3 }, (_, i) => createMockTrip(i));
 
-// Fake weather line for the detail screen
-function useMockWeather(coords) {
-  return useMemo(() => {
-    if (!coords) return null;
-    return { tempC: 5 + Math.round(Math.random() * 5), desc: "cloudy", icon: "☁️" };
+function useWeather(coords) {
+  const [weather, setWeather] = useState(null);
+
+  useEffect(() => {
+    if (!coords) return;
+
+    const fetchWeather = async () => {
+      try {
+        const apiKey = "d5ae996229de7ac9d53ce64aa9404348";
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${coords.latitude}&lon=${coords.longitude}&units=metric&appid=${apiKey}`;
+        const res = await fetch(url);
+        const json = await res.json();
+
+        setWeather({
+          tempC: Math.round(json.main.temp),
+          desc: json.weather[0].description,
+          icon: "🌤️",
+        });
+      } catch (e) {
+        console.log("Weather fetch error:", e);
+        setWeather(null); // no fallback / no random
+      }
+    };
+
+    fetchWeather();
   }, [coords]);
+
+  return weather;
 }
+
 
 // Simple map picker: long‑press to drop a pin, confirm to return it
 const MapPickerModal = ({ visible, onClose, initial, onPick }) => {
@@ -208,6 +232,23 @@ const AddTripScreen = ({ nav, addTrip }) => {
     });
     if (!res.canceled && res.assets?.length) setPickedUri(res.assets[0].uri);
   };
+  // Take a photo with the device camera
+const takePhoto = async () => {
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  if (status !== "granted") {
+    return Alert.alert("Permission needed", "Camera access is required.");
+  }
+
+  const res = await ImagePicker.launchCameraAsync({
+    quality: 0.85,
+  });
+
+  if (!res.canceled && res.assets?.length) {
+    setPickedUri(res.assets[0].uri);
+  }
+};
+
+
 
   const onSave = () => {
     if (!title.trim()) return Alert.alert("Missing", "Give your trip a title.");
@@ -258,6 +299,8 @@ const AddTripScreen = ({ nav, addTrip }) => {
       />
 
       <Btn title="📷 Pick Photo" onPress={pickPhoto} style={{ marginTop: 12 }} />
+      <Btn title="📸 Take Photo" onPress={takePhoto} style={{ marginTop: 8 }} />
+
       {pickedUri ? (
         <Image
           source={{ uri: pickedUri }}
@@ -314,7 +357,7 @@ const AddTripScreen = ({ nav, addTrip }) => {
 
 // Details: show the photo, a static marker, and a fake weather line
 const DetailScreen = ({ trip }) => {
-  const weather = useMockWeather(trip?.coords);
+const weather = useWeather(trip?.coords);
   if (!trip) {
     return (
       <View style={{ flex: 1, backgroundColor: "beige", alignItems: "center", justifyContent: "center" }}>
